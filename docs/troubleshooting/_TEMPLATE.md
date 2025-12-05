@@ -1,43 +1,46 @@
-# [Issue Title]
+# TITLE (short, specific, searchable)
+e.g. "SSH - Permission denied (publickey)"
 
-## Overview
+## Context
+- Date:
+- Analyst:
+- System: (GCP VM / QuPath / DeepCell / Git / etc.)
+- Related repo/task: (link)
 
-Brief description of the issue or problem area.
+## Problem
+One-paragraph description of what was going wrong.
+Include **exact error message(s)** (copy/paste).
 
-## Symptoms
+Example:
+> ssh: Permission denied (publickey).
 
-- Symptom 1
-- Symptom 2
-- Symptom 3
+## Diagnosis
+What we determined was actually happening.
 
-## Common Causes
+- [ ] Root cause 1
+- [ ] Root cause 2
+- [ ] Contributing factors
 
-1. **Cause 1**: Description of the first common cause
-2. **Cause 2**: Description of the second common cause
+## Fix (Step-by-step)
+Numbered, copy/pasteable steps.
 
-## Solutions
+1. ...
+2. ...
+3. ...
 
-### Solution 1: [Brief Title]
+## Verification
+How we confirmed it worked.
 
-Step-by-step instructions to resolve the issue:
+- Command(s) run:
+- Screenshots/plots (if applicable):
+- Expected vs actual behavior:
 
-1. Step 1
-2. Step 2
-3. Step 3
-
-### Solution 2: [Brief Title]
-
-Alternative solution if the first doesn't work:
-
-1. Step 1
-2. Step 2
-
-## Prevention
-
-Tips for preventing this issue in the future:
-
-- Preventive measure 1
-- Preventive measure 2
+## Prevention / Notes
+- Any config changes?
+- Any scripts/notebooks updated?
+- Any SOP to update?
+- Links to related KB entries:
+-
 
 ## Related Resources
 
