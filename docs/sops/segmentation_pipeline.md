@@ -1,41 +1,90 @@
 # Segmentation Pipeline SOP
 
-## Purpose
+## 1. Purpose
 
-Standard Operating Procedure for running the cell segmentation pipeline using DeepCell Mesmer.
+Provide analysts with a fully reproducible, QC-driven, version-locked procedure for running cell segmentation with DeepCell Mesmer. This SOP ensures consistent results, minimal rework, and traceable troubleshooting across teams and clients.
 
-## Prerequisites
+## 2. Scope
+This SOP applies to:
+- OME-TIFF or TIFF multiplex images
+- Nuclear-only, membrane-only, or combined nuclear+cytoplasm segmentation
+- GPU-enabled environments on GCP VMs or local GPU workstations
 
+## 3. Prerequisites / Required Inputs
+Analysts must prepare the following before running segmentation:
+### 3.1. Folder Structure (MANDATORY)
+```
+project_root/
+  raw/
+    image.ome.tiff
+  segmentation/
+    logs/
+    qc/
+    masks/
+    metadata.json
+  notebooks/
+```
+If this structure does not exist → analyst must create it.
+
+### 3.2. Required Files
+- Nuclear channel TIFF or OME-TIFF
+- Cytoplasm/membrane channel TIFF (if whole-cell segmentation)
+- Metadata file describing:
+ - channels used
+ - mpp
+ - version of Mesmer
+   
+## 4. Required Prerequisites on VM
 - Python 3.8+ installed
 - DeepCell package installed (`pip install deepcell`)
 - GPU with CUDA support (recommended)
-- Input images in supported format (TIFF, OME-TIFF)
-
-## Equipment/Software
-
-- DeepCell Mesmer application
+- Input images in supported format (TIFF, OME-TIFF
 - TensorFlow 2.x
 - Python scientific stack (numpy, scikit-image, tifffile)
 
-## Procedure
 
-### Step 1: Environment Setup
-
-Activate the segmentation environment:
-
+### 4.1  Conda environment (version locked)
+- Analysts must not modify this environment. Changes break reproducibility.
 ```bash
-conda activate segmentation
-# or
-source venv/bin/activate
+conda activate deepcell-0.12
 ```
+If the environment is missing, recreate:
+````bash
+conda env create -f envs/deepcell_mesmer.yml
+````
+### 4.2. GPU verification (MANDATORY)
+Before any run:
+````bash
+nvidia-smi
+python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+````
+If GPU is not detected → STOP → update deepcell_mesmer_errors.md.
 
-Verify installation:
+### 4.3. Verify installation:
 
 ```python
 from deepcell.applications import Mesmer
 app = Mesmer()
 print("Mesmer loaded successfully")
 ```
+
+## 5. Pipeline Procedure
+### Step 0 - activate environment
+```bash
+conda activate deepcell-0.1.2
+# or
+source venv/bin/activate
+```
+### Step 1 — Load Image and Verify Channels
+Analyst must confirm correct channel indices and shapes:
+```python
+import tifffile
+img = tifffile.imread('raw/image.ome.tiff')
+print(img.shape)
+```
+
+
+
 
 ### Step 2: Prepare Input Images
 
