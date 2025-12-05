@@ -49,7 +49,7 @@ Typical root causes:
 ls -l ~/.ssh/davis-image-segmentation-vm
 ```
 
-### Solution 3 (Unix): Fix SSH Key Permissions
+### 3 (Unix): Fix SSH Key Permissions
 
 Ensure your SSH key files have the correct permissions:
 
@@ -59,12 +59,19 @@ chmod 644 ~/.ssh/id_rsa.pub
 chmod 700 ~/.ssh
 ```
 
-### Solution 4: Verify SSH Config
+### 4: Verify SSH Config
 
 Check your SSH configuration file:
 
 ```bash
 cat ~/.ssh/config
+```
+
+### 5: Add key to ssh-agent
+```
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/davis-image-segmentation-vm
+ssh-add -l  # confirm it's listed
 ```
 
 Ensure host entries are properly formatted:
@@ -76,7 +83,7 @@ Host myserver
     IdentityFile ~/.ssh/id_rsa
 ```
 
-### Solution 5: Test SSH Connection Verbosely
+### 6: Test SSH Connection Verbosely
 
 Use verbose mode to diagnose issues:
 
@@ -84,8 +91,46 @@ Use verbose mode to diagnose issues:
 ssh -vvv user@host
 ```
 
+### 7: if using OS Login
+Make sure OS Login is enabled and your user has roles/compute.osLogin:
+```
+gcloud auth login
+gcloud config set project <PROJECT_ID>
+gcloud compute os-login ssh-keys add --key-file=~/.ssh/davis-image-segmentation-vm.pub
+```
+Then:
+```
+gcloud compute ssh <INSTANCE_NAME> --zone=<ZONE> --project=<PROJECT_ID> \
+  --ssh-key-file=~/.ssh/davis-image-segmentation-vm
+```
+
+### 8: If still failing - use serial console for recovery
+
+1. Enable serial port access in VM settings.
+2. Use GCP console serial console to log in as root/user.
+3. Check /home/<user>/.ssh/authorized_keys and ensure the correct public key is present.
+4. Fix permissions
+```
+chmod 700 /home/<user>/.ssh
+chmod 600 /home/<user>/.ssh/authorized_keys
+chown -R <user>:<user> /home/<user>/.ssh
+```
+5. Retry ssh
+
+### Verification
+
+- ssh user@IP connects without errors.
+- You can ls expected project directories.
+- Document which method worked (direct key vs OS Login).
+
 ## Prevention
 
+- Standardize on OS Login for all analysts.
+- Each VM must have:
+- Documented project
+  - Owner
+  - Access method
+- Any time a VM is rebuilt, update this doc if there’s a new trap.
 - Regularly rotate SSH keys
 - Use SSH agent for key management
 - Keep SSH client and server software updated
