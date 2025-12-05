@@ -1,4 +1,4 @@
-# Git Branching Issues
+# Git Branching Issues and Non-Fast-Forward Push Errors
 
 ## Overview
 
@@ -6,11 +6,21 @@ Common issues encountered with Git branching, merging, and workflow management.
 
 ## Symptoms
 
+- Typical error:
+> ! [rejected] main -> main (non-fast-forward)  
+> error: failed to push some refs  
+> hint: Updates were rejected because the tip of your current branch is behind its remote counterpart.
 - Merge conflicts
 - Detached HEAD state
 - Unable to push to remote
 - Branch synchronization problems
 - Lost commits
+
+## Diagnosis
+
+- Local `main` is behind remote.
+- You’re trying to push without updating.
+- Sometimes mixed with uncommitted local changes.
 
 ## Common Causes
 
@@ -21,7 +31,7 @@ Common issues encountered with Git branching, merging, and workflow management.
 
 ## Solutions
 
-### Solution 1: Resolve Merge Conflicts
+###  1: Resolve Merge Conflicts
 
 When encountering merge conflicts:
 
@@ -39,7 +49,7 @@ git add <resolved-file>
 git commit
 ```
 
-### Solution 2: Fix Detached HEAD
+###  2: Fix Detached HEAD
 
 Recover from detached HEAD state:
 
@@ -51,7 +61,7 @@ git checkout -b new-branch-name
 git checkout main
 ```
 
-### Solution 3: Sync with Remote
+###  3: Sync with Remote
 
 Update your local branch with remote changes:
 
@@ -66,7 +76,7 @@ git rebase origin/main
 git merge origin/main
 ```
 
-### Solution 4: Recover Lost Commits
+###  4: Recover Lost Commits
 
 Use reflog to find lost commits:
 
@@ -75,8 +85,34 @@ git reflog
 git checkout <commit-hash>
 ```
 
-## Prevention
+## 5: Update from remote with rebase
+```bash
+git pull origin main --rebase
+```
+Resolve conflicts if present.
 
+### 6. Push
+```bash
+git push origin main
+```
+## 7: If pulling a feature branch
+```bash
+git checkout trevor-spatial-additions
+git status   # clean working tree required
+git pull origin trevor-spatial-additions --rebase
+git push origin trevor-spatial-additions
+```
+## Verification
+- git status shows clean.
+- git log --oneline --graph --decorate --all shows a linear history.
+- 
+
+## Prevention / Notes
+
+- Never work directly on main for complex changes.
+- Use feature branches:
+  - git checkout -b feature/<short-desc>
+  - Use PRs, not direct pushes to main.
 - Pull/rebase before starting new work
 - Create feature branches for all changes
 - Commit frequently with descriptive messages
