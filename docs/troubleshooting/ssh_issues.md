@@ -130,7 +130,34 @@ chown -R <user>:<user> /home/<user>/.ssh
 - Documented project
   - Owner
   - Access method
-- Any time a VM is rebuilt, update this doc if there’s a new trap.
+- Any time a VM is rebuilt, update this doc if there’s a new trap
+- If OS Login broken – attach disk to a rescue VM
+  - Stop instance.
+  - Detach disk.
+  - Attach disk to a known-good VM as secondary.
+  - Mount and copy critical data (e.g. /home, /opt, conda envs, notebooks).
+- Rebuild clean VM
+  - Use Terraform/template if you have one.
+  - Reattach recovered data as needed.
+  - Document the new access method and put a link here.
+
+## Verification
+
+- Analyst confirms they can:
+  - SSH into VM
+  - Run their segmentation pipeline
+  - Access prior data
+
+## Prevention / Notes
+- No “snowflake” VMs:
+- All must be reproducible from an image or Terraform.
+- For each VM:
+  - Keep a short VM_MANIFEST.md in this repo with:
+    - Purpose
+    - Owner
+    - Creation method
+    - Access method (OS Login / key)
+
 - Regularly rotate SSH keys
 - Use SSH agent for key management
 - Keep SSH client and server software updated
