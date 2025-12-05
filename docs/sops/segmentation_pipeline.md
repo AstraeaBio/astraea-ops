@@ -83,7 +83,8 @@ img = tifffile.imread('raw/image.ome.tiff')
 print(img.shape)
 ```
 
-
+### Step 1.5 - Tiling and Nucleus / Cytoplasm Identification (TODO: fill out)
+Use tile-based input, never full whole-slide arrays unless < 4k x 4k.
 
 
 ### Step 2: Prepare Input Images
@@ -104,6 +105,7 @@ image = np.expand_dims(image, axis=0)
 
 print(f"Image shape: {image.shape}")  # Should be (1, H, W, 2)
 ```
+If tiling code is used, record tile size in logs.
 
 ### Step 3: Run Segmentation
 
@@ -127,9 +129,31 @@ segmentation = app.predict(
 print(f"Segmentation shape: {segmentation.shape}")
 print(f"Number of cells detected: {segmentation.max()}")
 ```
+Log:
+- Start time
+- End time
+- GPU memory usage
+- Number of cells detected
+If seg.max() < 50 for a typical ROI → flag as QC failure.
 
-### Step 4: Save Results
-
+### Step 4: Save Outputs
+Analyst must save:
+```bash
+segmentation/masks/mask_<timestamp>.tiff
+segmentation/logs/run_<timestamp>.txt
+segmentation/qc/qc_<timestamp>.png
+```
+Metadata file appended:
+```json
+{
+  "mesmer_version": "0.12.0",
+  "tensorflow_version": "2.10",
+  "mpp": 0.5,
+  "channels_used": ["DAPI", "Membrane"],
+  "tile_size": 2048,
+  "batch_time_sec": 12.3
+}
+```
 Export segmentation masks:
 
 ```python
@@ -144,7 +168,7 @@ tifffile.imwrite('segmentation_mask.tiff', mask.astype(np.uint16))
 print("Segmentation mask saved")
 ```
 
-### Step 5: Quality Control
+### Step 5: Quality Control (MANDATORY)
 
 Review segmentation results:
 
@@ -167,26 +191,83 @@ plt.savefig('qc_visualization.png', dpi=150)
 plt.show()
 ```
 
-## Quality Criteria
+Analyst must review three default QC plots:
+## Quality Criteria (failure if violated):
 
 - [ ] All cells are individually segmented
+- [ ] No merged clusters > 30 µm diameter
 - [ ] No significant over-segmentation (single cells split into multiple)
 - [ ] No significant under-segmentation (multiple cells merged)
-- [ ] Cell boundaries align with cytoplasm staining
+- [ ] No “exploding cells” (Mesmer artifact)
+- [ ] Cell boundaries align with cytoplasm / membrane staining
 - [ ] Nuclear masks are contained within whole-cell masks
+- [ ] Cell count is biologically plausible (range specified per tissue type)
 
-## Troubleshooting
+If any QC criteria fail →
+Analyst must attempt remediation before escalating.
 
+### Step 6: Definition of Done (NON-NEGOTIABLE)
+Segmentation is DONE only when all boxes checked:
+## Output Quality
+- [ ] Mask TIFF saved in correct folder
+- [ ] QC image saved
+- [ ] Mesmer version recorded
+- [ ] Log file completed with start/end times
+- [ ] Metadata JSON updated
+- [ ] Analyst has reviewed QC and it PASSED
+- [ ] If QC failed → troubleshooting entry created
+## Reproducibility
+- [ ] Command(s) used are pasted into log
+- [ ] Code version (branch or commit hash) recorded
+## Communication
+- [ ] Summary posted to ClickUp task with:
+    - What was done
+    - Where outputs are
+    - Any QC concerns
+    - Link to troubleshooting entry if applicable
+Please ensure the above steps are complete before submitting the results for review.
+
+### 7: Troubleshooting
 - For segmentation errors, see [DeepCell Mesmer Errors](../troubleshooting/deepcell_mesmer_errors.md)
 - For memory issues, try processing images in smaller tiles
+
+Before escalating:
+Analyst must complete:
+1. Check GPU (nvidia-smi)
+2. Check Mesmer version
+3. Check input image shape
+4. Check memory usage
+5. Run segmentation on a single small tile
+6. Log ALL ERRORS into a new entry under:[DeepCell Mesmer Errors](../troubleshooting/deepcell_mesmer_errors.md)
+
+Escalation rules:
+- Only escalate after attempting troubleshooting
+- Escalation must include:
+  - Logs
+  - Screenshots
+  - Input shapes
+  - Exact code block used
+  - Link to troubleshooting entry
+
+### 8: Common Mistakes
+- Running whole-slide at once (causes OOM and rework)
+- Forgetting GPU check
+- Using wrong Mesmer version
+- Forgetting to record which channels were used
+- Missing metadata.json
+- QC images not included
+- Not checking mask range (if max() < 20, usually bad segmentation)
 
 ## References
 
 - DeepCell Documentation: https://deepcell.readthedocs.io/
 - Mesmer Paper: https://doi.org/10.1038/s41587-021-01094-0
+- Astraea Troubelshooting KB [DeepCell Mesmer Errors](../troubleshooting/deepcell_mesmer_errors.md)
+- Example segmentation logs (to be added)
 
 ## Version History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.1 | 2025-12-05 | Trevor McKee | Rewritten for operational reproducibility and QC rigor |
 | 1.0 | 2025-12-05 | Astraea Team | Initial version |
