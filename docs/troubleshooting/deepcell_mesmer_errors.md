@@ -12,17 +12,46 @@ Troubleshooting guide for DeepCell Mesmer segmentation pipeline errors and issue
 - Model loading failures
 - GPU not detected or utilized
 
+## Examples:
+> Kernel keeps dying when running Mesmer  
+> CUDA device not found  
+> Out-of-memory errors on 20-core TMA
+
+## Diagnosis
+
 ## Common Causes
 
-1. **Insufficient memory**: Large images exceeding available RAM/VRAM
-2. **Incorrect image format**: Input images not in expected format
-3. **Model file corruption**: Downloaded model files incomplete or corrupted
-4. **CUDA/GPU compatibility issues**: Driver or library version mismatches
-5. **Input channel mismatch**: Nuclear and cytoplasm channels incorrectly specified
+1. Processing entire whole-slide instead of tiles
+2. **Insufficient memory**: Large images exceeding available RAM/VRAM / Batch size too large for GPU memory
+3. **Incorrect image format**: Input images not in expected format
+4. **Model file corruption**: Downloaded model files incomplete or corrupted
+5. **CUDA/GPU compatibility issues**: Driver or library version mismatches / Wrong CUDA / TensorFlow / driver combo
+6. **Input channel mismatch**: Nuclear and cytoplasm channels incorrectly specified
+7. Running on CPU instead of GPU.
 
 ## Solutions
 
-### Solution 1: Handle Memory Issues
+### Solution 1: GPU Troubleshooting
+1. **Confirm GPU visible**
+```bash
+nvidia-smi
+```
+2. Confirm Python can see GPU
+- in python
+```python
+import tensorflow as tf
+print(tf.config.list_physical_devices('GPU'))
+```
+
+3. Reduce workload
+- Use smaller tiles.
+- Reduce batch size.
+
+4. Use a known-good env
+- Use the environment file envs/deepcell_mesmer.yml (create and document this).
+- Install exact DeepCell version listed there.
+
+### Solution 2: Handle Memory Issues
 
 For large images, process in tiles:
 
@@ -48,7 +77,7 @@ from skimage.transform import resize
 image_small = resize(image, (image.shape[0]//2, image.shape[1]//2), preserve_range=True)
 ```
 
-### Solution 2: Verify Input Format
+### Solution 3: Verify Input Format
 
 Ensure correct input format for Mesmer:
 
@@ -64,7 +93,7 @@ print(f"Image dtype: {image.dtype}")
 image = image.astype(np.float32)
 ```
 
-### Solution 3: Reinstall or Re-download Model
+### Solution 4: Reinstall or Re-download Model
 
 Clear cached models and reinstall:
 
@@ -77,7 +106,7 @@ pip uninstall deepcell
 pip install deepcell
 ```
 
-### Solution 4: Check GPU Configuration
+### Solution 5: Check GPU Configuration
 
 Verify TensorFlow GPU setup:
 
