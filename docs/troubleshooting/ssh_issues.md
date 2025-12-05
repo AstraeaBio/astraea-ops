@@ -1,15 +1,21 @@
-# SSH Issues
+# SSH - Common Issues and Fixes
 
-## Overview
+## Context
+- System: GCP VMs (analysis / segmentation machines)
 
-Common SSH connection and authentication problems encountered when accessing remote servers and VMs.
+---
 
-## Symptoms
+## Problem
+`ssh -i ~/.ssh/davis-image-segmentation-vm user@IP`  
+returns:
 
-- Connection refused errors
-- Permission denied (publickey) errors
-- Connection timeout issues
-- Host key verification failed
+> Permission denied (publickey)
+
+or:
+
+> Connection timed out
+
+---
 
 ## Common Causes
 
@@ -18,9 +24,32 @@ Common SSH connection and authentication problems encountered when accessing rem
 3. **Firewall blocking port 22**: Network restrictions preventing connections
 4. **Expired or revoked keys**: SSH keys may no longer be valid
 
-## Solutions
+## Diagnosis
 
-### Solution 1: Fix SSH Key Permissions
+Typical root causes:
+
+- Wrong private key specified in `-i` or key not present on local machine.
+- Key not added to `ssh-agent`.
+- VM was rebuilt and does not have the same `authorized_keys`.
+- OS Login / IAM misconfigured (GCP user not allowed).
+- Firewall rule or network tag blocking SSH.
+- VM not actually running.
+
+---
+
+## Fix (Checklist)
+
+### 1. Confirm VM is running
+1. In GCP console, check VM status = `Running`.
+2. If `Terminated`, start it and retry.
+
+### 2. Confirm correct private key exists
+
+```bash
+ls -l ~/.ssh/davis-image-segmentation-vm
+```
+
+### Solution 3 (Unix): Fix SSH Key Permissions
 
 Ensure your SSH key files have the correct permissions:
 
@@ -30,7 +59,7 @@ chmod 644 ~/.ssh/id_rsa.pub
 chmod 700 ~/.ssh
 ```
 
-### Solution 2: Verify SSH Config
+### Solution 4: Verify SSH Config
 
 Check your SSH configuration file:
 
@@ -47,7 +76,7 @@ Host myserver
     IdentityFile ~/.ssh/id_rsa
 ```
 
-### Solution 3: Test SSH Connection Verbosely
+### Solution 5: Test SSH Connection Verbosely
 
 Use verbose mode to diagnose issues:
 
