@@ -1,41 +1,67 @@
 # Phenotyping Pipeline SOP
 
 ## Purpose
+Standard Operating Procedure for **reproducible, QC-driven, marker-based phenotyping** of segmented cells using QuPath. This SOP defines mandatory inputs, folder structure, intensity extraction steps, classification rules, QC checks, and Definition of Done to ensure consistency across all analysts and projects.
 
-Standard Operating Procedure for cell phenotyping analysis using QuPath and marker-based classification.
+---
 
-## Prerequisites
+# 1. Required Inputs
 
-- QuPath 0.4.0 or later installed
-- Segmentation masks from the segmentation pipeline
-- Multi-channel immunofluorescence images
-- Marker panel definition
+Analysts must have the following before starting:
 
-## Equipment/Software
+### **1.1 Folder Structure (MANDATORY)**
 
-- QuPath application
-- Required QuPath extensions (if applicable)
-- Python for post-processing (optional)
+```
+project_root/
+  raw/
+    image.ome.tiff
+  segmentation/
+    masks/
+      mask_<date>.tiff
+  phenotyping/
+    logs/
+    qc/
+    exports/
+    metadata.json
+```
 
-## Procedure
+### **1.2 Required Files**
+- OME-TIFF or TIFF multiplex image
+- Segmentation masks from the segmentation pipeline  
+- Marker panel definition JSON or CSV  
+- Threshold definitions (if pre-defined for the project)  
+- Tissue-specific QC expectations (if provided)
 
-### Step 1: Project Setup
+---
 
-Create a new QuPath project:
+# 2. Software Requirements
+- QuPath 0.4.0 or later  
+- Recommended extensions (StarDist, Cellpose, etc.) if needed  
+- Python (optional) for downstream analysis  
 
-1. Open QuPath
-2. File > Create project
-3. Select a project directory
-4. Add images to project via drag-and-drop or File > Add images
+---
 
-### Step 2: Import Segmentation Masks
+# 3. Procedure
 
-Import pre-computed segmentation masks:
+## Step 1 — Project Setup
+
+1. Open QuPath  
+2. **File → Create Project**  
+3. Select the project directory  
+4. Add image(s):  
+   - Drag-and-drop  
+   - OR `File → Add Images`  
+
+Verify correct channel names before proceeding.
+
+---
+
+## Step 2 — Import Segmentation Masks
+
+### **Scripted import (preferred)**
 
 ```groovy
-// QuPath script to import segmentation mask
 import qupath.lib.objects.PathObjects
-import qupath.lib.roi.RoiTools
 import qupath.lib.images.servers.LabeledImageServer
 
 def labelPath = '/path/to/segmentation_mask.tiff'
@@ -44,130 +70,203 @@ def labelServer = new LabeledImageServer.Builder(labelPath)
     .build()
 
 def labels = labelServer.getLabels()
+
 for (label in labels) {
     def roi = labelServer.getROI(label)
     def cell = PathObjects.createCellObject(roi, null, null)
     addObject(cell)
 }
+
+fireHierarchyUpdate()
+println "Imported ${labels.size()} segmented cells."
 ```
 
-Or manually load masks:
-1. Objects > Import objects
-2. Select the segmentation mask file
-3. Configure import settings
+### **Manual import (acceptable for testing)**
+1. `Objects → Import Objects`  
+2. Select segmentation mask  
+3. Confirm mask layer alignment  
 
-### Step 3: Measure Intensities
+Analyst must record import method in the phenotyping log.
 
-Calculate marker intensities per cell:
+---
 
-1. Analyze > Calculate features > Add intensity features
-2. Select all marker channels
-3. Choose measurement types (Mean, Median, etc.)
-4. Click "Run"
+## Step 3 — Extract Marker Intensities (MANDATORY)
 
-Alternatively, use script:
+### **GUI Method**
+1. `Analyze → Calculate features → Add Intensity features`  
+2. Select all relevant channels  
+3. Use: Mean, Median, Min, Max, Std, Sum  
+4. Click **Run**
+
+### **Scripting Method (preferred for reproducibility)**
 
 ```groovy
-// Measure all intensity features
 import qupath.lib.analysis.features.ObjectMeasurements
 
 def measurements = ObjectMeasurements.Measurements.values()
 def compartments = ObjectMeasurements.Compartments.values()
 
-for (detection in getDetectionObjects()) {
+for (cell in getDetectionObjects()) {
     ObjectMeasurements.addIntensityMeasurements(
         getCurrentServer(),
-        detection,
-        1.0,  // downsample
+        cell,
+        1.0, // downsample
         measurements,
         compartments
     )
 }
+
+fireHierarchyUpdate()
+println "Intensity measurements added to ${getDetectionObjects().size()} cells."
 ```
 
-### Step 4: Define Phenotypes
+### **Analyst must verify:**
+- All expected measurement columns appear in the table  
+- No missing values for major markers  
+- Bright/dim channel distributions are reasonable  
 
-Create classifiers based on marker expression:
+If measurements look incorrect → STOP → update troubleshooting KB.
 
-Manual thresholding:
-1. Classify > Set cell intensity classifications
-2. Select marker channel
-3. Set positive/negative threshold
-4. Apply to all cells
+---
 
-Or create composite classifier:
+## Step 4 — Define Phenotypes
+
+### **4.1 Standard Marker Naming Rules (CRITICAL)**
+
+To avoid downstream chaos:
+
+- Channel names must match panel definitions  
+- No spaces: use `CD8_mean`, not `CD8 mean`  
+- Nuclear markers must be prefixed with `Nuc_`  
+- Membrane/cell markers with `Cell_`
+
+Analysts must correct channel names in QuPath before classification.
+
+---
+
+## Step 5 — Apply Threshold-Based Classification
+
+### **Manual Thresholding**
+1. `Classify → Set cell intensity classifications`  
+2. Select marker  
+3. Apply threshold  
+4. Validate threshold using positive-control ROIs  
+
+### **Composite Classifiers (Recommended)**  
+Example: CD8+ T cells
 
 ```groovy
-// Example: Define CD8+ T cells
-def cd8Threshold = 50.0
-def cd3Threshold = 40.0
+def cd8Threshold = 50
+def cd3Threshold = 40
 
 for (cell in getCellObjects()) {
     def cd8 = measurement(cell, "Cell: CD8 mean")
     def cd3 = measurement(cell, "Cell: CD3 mean")
-    
-    if (cd8 > cd8Threshold && cd3 > cd3Threshold) {
+
+    if (cd8 > cd8Threshold && cd3 > cd3Threshold)
         cell.setPathClass(getPathClass("CD8+ T cell"))
-    }
+    else
+        cell.setPathClass(getPathClass("Other"))
 }
+
 fireHierarchyUpdate()
+println "Phenotyping complete."
 ```
 
-### Step 5: Export Results
+Analyst must document threshold values used in `phenotyping/metadata.json`.
 
-Export phenotyping results:
+---
+
+## Step 6 — Export Results
+
+### Scripted export (preferred)
 
 ```groovy
-// Export measurements to CSV
-def path = buildFilePath(PROJECT_BASE_DIR, 'exports', 'phenotype_results.csv')
-saveDetectionMeasurements(path)
-print("Results exported to: " + path)
+def exportPath = buildFilePath(PROJECT_BASE_DIR, 'phenotyping', 'exports', 'phenotype_results.csv')
+saveDetectionMeasurements(exportPath)
+println "Phenotype results exported to ${exportPath}"
 ```
 
-Or export via GUI:
-1. Measure > Export measurements
-2. Select output file and format
-3. Choose measurements to include
-4. Click "Export"
+### GUI export
+1. `Measure → Export measurements`  
+2. Save to `phenotyping/exports/`
 
-### Step 6: Quality Control
+### Required exports:
+- Full measurement table  
+- Phenotype summary counts  
+- QC plots  
 
-Validate phenotyping results:
+---
+
+# 7. Quality Control (MANDATORY)
+
+### **Analysts must generate a phenotype QC summary:**
 
 ```groovy
-// Generate phenotype summary
-def classCounts = [:]
-for (cell in getCellObjects()) {
-    def className = cell.getPathClass()?.toString() ?: "Unclassified"
-    classCounts[className] = (classCounts[className] ?: 0) + 1
-}
-
-println "Phenotype Summary:"
-classCounts.each { k, v -> 
-    println "  ${k}: ${v} cells"
-}
+def counts = getCellObjects().groupBy { it.getPathClass()?.toString() ?: "Unclassified" }
+counts.each { k, v -> println "${k}: ${v.size()} cells" }
 ```
 
-## Quality Criteria
+### **QC Criteria**
+- [ ] All cells have intensity measurements  
+- [ ] Thresholds validated using positive-control regions  
+- [ ] Major cell populations match expected biology  
+- [ ] No unusual or biologically implausible populations  
+- [ ] Phenotype distribution is consistent with segmentation masks  
+- [ ] Less than 5% cells remain "Unclassified" unless justified  
 
-- [ ] All cells have intensity measurements
-- [ ] Threshold values are validated against positive controls
-- [ ] Phenotype distributions match expected biology
-- [ ] No unexpected cell populations
-- [ ] Results are reproducible across technical replicates
+If QC fails → analyst must create a troubleshooting entry.
 
-## Troubleshooting
+---
 
-- For QuPath errors, see [QuPath Common Errors](../troubleshooting/qupath_common_errors.md)
-- For classifier issues, verify threshold values on positive control samples
+# 8. Definition of Done (NON-NEGOTIABLE)
 
-## References
+Phenotyping is **DONE** only when:
 
-- QuPath Documentation: https://qupath.readthedocs.io/
-- QuPath Wiki: https://github.com/qupath/qupath/wiki
+### **Outputs**
+- [ ] Classified cells present in object hierarchy  
+- [ ] CSV export saved to `phenotyping/exports/`  
+- [ ] QC phenotype summary saved to `phenotyping/qc/`  
+- [ ] Metadata JSON updated with thresholds, versions, date  
 
-## Version History
+### **Reproducibility**
+- [ ] Script or GUI steps used recorded in `phenotyping/logs/run_<date>.txt`  
+- [ ] QuPath version and settings logged  
+
+### **Communication**
+- [ ] Analyst posts summary to ClickUp including:  
+  - Thresholds used  
+  - QC results  
+  - File locations  
+  - Link to troubleshooting entry (if applicable)
+
+If ANY item above is missing → work is returned to analyst.
+
+---
+
+# 9. Troubleshooting
+
+If errors occur:
+
+1. Reproduce the issue  
+2. Document error message + screenshot  
+3. Attempt two fixes  
+4. Add/update entry in:  
+   `../troubleshooting/qupath_common_errors.md`  
+5. Only then escalate  
+
+---
+
+# 10. References
+- QuPath Documentation: https://qupath.readthedocs.io/  
+- Panel definitions and threshold library (internal)  
+- Troubleshooting KB  
+
+---
+
+# 11. Version History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.1 | 2025-12-05 | McKee | Revised for QC, reproducibility, and operational rigor |
 | 1.0 | 2025-12-05 | Astraea Team | Initial version |
