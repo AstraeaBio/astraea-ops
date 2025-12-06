@@ -95,7 +95,7 @@ Analyst must record import method in the phenotyping log.
 ### **GUI Method**
 1. `Analyze → Calculate features → Add Intensity features`  
 2. Select all relevant channels  
-3. Use: Mean, Median, Min, Max, Std, Sum  
+3. Use: Mean, Median, Std
 4. Click **Run**
 
 ### **Scripting Method (preferred for reproducibility)**
@@ -140,17 +140,15 @@ To avoid downstream chaos:
 - Nuclear markers must be prefixed with `Nuc_`  
 - Membrane/cell markers with `Cell_`
 
-Analysts must correct channel names in QuPath before classification.
+Analysts must correct channel names in QuPath before classification. TODO Script for channel renaming to come...
 
 ---
 
 ## Step 5 — Apply Threshold-Based Classification
 
 ### **Manual Thresholding**
-1. `Classify → Set cell intensity classifications`  
-2. Select marker  
-3. Apply threshold  
-4. Validate threshold using positive-control ROIs  
+1. Utilize manual thresholding SOP - see  `sops/phenotyping_manual.md`
+2. Validate threshold using positive-control ROIs  
 
 ### **Composite Classifiers (Recommended)**  
 Example: CD8+ T cells
@@ -240,7 +238,7 @@ Phenotyping is **DONE** only when:
   - File locations  
   - Link to troubleshooting entry (if applicable)
 
-If ANY item above is missing → work is returned to analyst.
+If ANY item above is missing → work is returned for completion.
 
 ---
 
