@@ -10,6 +10,9 @@ Common issues encountered with Git branching, merging, and workflow management.
 > ! [rejected] main -> main (non-fast-forward)  
 > error: failed to push some refs  
 > hint: Updates were rejected because the tip of your current branch is behind its remote counterpart.
+- `error: src refspec main does not match any`
+- fatal: not a git repository (or any of the parent directories): .git`
+- Merge conflicts
 - Merge conflicts
 - Detached HEAD state
 - Unable to push to remote
@@ -21,6 +24,7 @@ Common issues encountered with Git branching, merging, and workflow management.
 - Local `main` is behind remote.
 - You’re trying to push without updating.
 - Sometimes mixed with uncommitted local changes.
+- The hidden `.git` folder is missing (raw files only) or the local branch name does not match the remote (`master` vs `main`).
 
 ## Common Causes
 
@@ -28,6 +32,8 @@ Common issues encountered with Git branching, merging, and workflow management.
 2. **Uncommitted changes blocking operations**: Working directory not clean
 3. **Incorrect branch checkout**: Working on wrong branch
 4. **Merge conflicts**: Concurrent changes to same files
+5. **Empty Repository / No Commits**: Trying to push a branch that has no history yet
+6. **Branch Name Mismatch**: Local is `master`, remote is `main`
 
 ## Solutions
 
@@ -102,6 +108,45 @@ git status   # clean working tree required
 git pull origin trevor-spatial-additions --rebase
 git push origin trevor-spatial-additions
 ```
+
+## 8: Initializing a Copied Repository (Fatal: not a git repository)
+If you copied files but lost the git history, you must initialize and force a merge of unrelated histories.
+```bash
+# Initialize new repo
+git init
+
+# Set default branch name
+git branch -M main
+
+# Add remote
+git remote add origin [https://github.com/AstraeaBio/astraea-ops](https://github.com/AstraeaBio/astraea-ops)
+
+# Sync history (Crucial step for copied repos)
+git pull origin main --allow-unrelated-histories
+
+# Push changes
+git add .
+git commit -m "Merging local copied changes"
+git push -u origin main
+```
+
+### 9: Fix 'src refspec main does not match any'
+This error occurs if you haven't committed yet (branch doesn't exist) or if your local branch is named master.
+```bash
+# 1. Ensure changes are staged
+git add .
+
+# 2. Ensure at least one commit exists
+git commit -m "Saving work before push"
+
+# 3. Force branch name to 'main'
+git branch -M main
+
+# 4. Push
+git push -u origin main
+```
+
+
 ## Verification
 - git status shows clean.
 - git log --oneline --graph --decorate --all shows a linear history.
@@ -124,4 +169,4 @@ git push origin trevor-spatial-additions
 
 ## Last Updated
 
-2025-12-05
+2025-12-09
