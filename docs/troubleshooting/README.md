@@ -23,3 +23,4 @@ This directory contains troubleshooting documentation for common issues encounte
 ## How to Add New Troubleshooting Guides
 
 Use the [_TEMPLATE.md](_TEMPLATE.md) as a starting point for new troubleshooting documentation.
+Come back in here and add the new file to this readme, if in a new category, add to new category.
