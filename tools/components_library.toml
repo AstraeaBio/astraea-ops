@@ -1,0 +1,934 @@
+version = "1.0"
+last_updated = "2024-12-20"
+usage_notes = "1. Time estimates are RANGES based on historical data. Adjust per project.\n2. Method dev hours = initial setup, optimization, pathologist rounds\n3. Compute hours = actual execution time (scales with sample count)\n4. Software dependencies listed are PRIMARY tools; see scripts for full environments\n5. For pro-bono method dev (as in CellSighter), set method_dev_hours_billed = 0\n6. Pathologist consultation time should be tracked SEPARATELY in SOW\n7. When in doubt, break large components into smaller sub-components for better tracking\n"
+
+[[phase_1_data_ingestion_qc]]
+component_id = "data-receipt-cloud-storage"
+name = "Data Receipt & Cloud Storage Setup"
+description = "Setup cloud storage container, download data, preliminary QC for format consistency"
+typical_method_dev_hours = [
+    1.0,
+    2.0,
+]
+typical_compute_hours = [
+    1.5,
+    3.5,
+]
+software_dependencies = [
+    "google-cloud-storage",
+    "aws-s3",
+]
+inputs = [
+    "Raw image files (TIFF, OME-TIFF, H5, etc.)",
+    "Metadata spreadsheets",
+]
+outputs = [
+    "Organized file structure",
+    "Format validation report",
+]
+notes = "First-time setup for new platform/client may require additional time"
+
+[[phase_1_data_ingestion_qc]]
+component_id = "file-format-validation"
+name = "File Format & Metadata Validation"
+description = "Check resolution, bit depth, channel naming, file completeness across all images"
+typical_method_dev_hours = [
+    0.5,
+    1.0,
+]
+typical_compute_hours = [
+    1.0,
+    2.0,
+]
+software_dependencies = [
+    "tifffile",
+    "pillow",
+    "bioformats",
+]
+inputs = [
+    "Raw image files",
+]
+outputs = [
+    "Validation report (CSV/JSON)",
+    "List of failed images",
+]
+notes = "Catches issues early before analysis begins"
+
+[[phase_1_data_ingestion_qc]]
+component_id = "image-qc-manual-review"
+name = "Manual Image QC Review"
+description = "Visual inspection of each image for artifacts, blur, tissue folds, staining issues"
+typical_method_dev_hours = [
+    0.5,
+    1.5,
+]
+typical_compute_hours = [
+    1.0,
+    3.0,
+]
+software_dependencies = [
+    "QuPath",
+    "napari",
+]
+inputs = [
+    "Raw images",
+]
+outputs = [
+    "QC spreadsheet with pass/fail per image",
+    "Annotated images highlighting artifacts",
+]
+notes = "Time scales with image count. ~2-5 min per image for manual review"
+
+[[phase_1_data_ingestion_qc]]
+component_id = "channel-naming-standardization"
+name = "Channel Naming Standardization"
+description = "Rename channels to consistent naming convention, map vendor names to standard markers"
+typical_method_dev_hours = [
+    0.5,
+    1.0,
+]
+typical_compute_hours = [
+    0.5,
+    1.5,
+]
+software_dependencies = [
+    "pandas",
+    "custom-scripts",
+]
+inputs = [
+    "Raw images with vendor channel names",
+    "Channel mapping spreadsheet",
+]
+outputs = [
+    "Renamed image files or metadata",
+    "Channel mapping documentation",
+]
+notes = "Essential for cross-project consistency"
+
+[[phase_1_data_ingestion_qc]]
+component_id = "virtual-tiled-image-creation"
+name = "Virtual Tiled Image Creation"
+description = "Create multi-ROI composite image for batch threshold optimization across samples"
+typical_method_dev_hours = [
+    1.0,
+    2.0,
+]
+typical_compute_hours = [
+    1.5,
+    3.0,
+]
+software_dependencies = [
+    "QuPath",
+    "tifffile",
+    "pillow",
+]
+inputs = [
+    "Individual ROI images",
+]
+outputs = [
+    "Virtual tiled image (large TIFF)",
+]
+notes = "Enables robust optimization on representative data"
+
+[[phase_2_segmentation]]
+component_id = "cell-segmentation-stardist"
+name = "Cell Segmentation - StarDist"
+description = "Nuclear and/or cellular segmentation using StarDist pretrained or finetuned models"
+typical_method_dev_hours = [
+    2.0,
+    4.0,
+]
+typical_compute_hours = [
+    3.0,
+    8.0,
+]
+software_dependencies = [
+    "stardist",
+    "tensorflow",
+    "numpy",
+]
+inputs = [
+    "Multi-channel images (nucleus channel required)",
+    "Optional: training annotations for finetuning",
+]
+outputs = [
+    "Cell masks (labeled images or GeoJSON)",
+    "Cell centroids (CSV)",
+]
+notes = "Method dev includes hyperparameter tuning. Compute scales with image count and resolution"
+
+[[phase_2_segmentation]]
+component_id = "cell-segmentation-mesmer"
+name = "Cell Segmentation - Mesmer"
+description = "Nuclear + whole-cell segmentation using DeepCell Mesmer model"
+typical_method_dev_hours = [
+    2.0,
+    4.0,
+]
+typical_compute_hours = [
+    3.0,
+    8.0,
+]
+software_dependencies = [
+    "deepcell",
+    "tensorflow",
+    "numpy",
+]
+inputs = [
+    "Multi-channel images (nucleus + membrane channels)",
+]
+outputs = [
+    "Nuclear masks",
+    "Whole-cell masks",
+    "Cell feature table (CSV)",
+]
+notes = "Works well on tissue with clear membrane staining"
+
+[[phase_2_segmentation]]
+component_id = "cell-segmentation-cellpose"
+name = "Cell Segmentation - Cellpose"
+description = "Generalist segmentation using Cellpose with custom model training option"
+typical_method_dev_hours = [
+    2.5,
+    5.0,
+]
+typical_compute_hours = [
+    4.0,
+    10.0,
+]
+software_dependencies = [
+    "cellpose",
+    "torch",
+]
+inputs = [
+    "Images (any modality)",
+    "Optional: training masks",
+]
+outputs = [
+    "Cell masks",
+    "Flow fields",
+]
+notes = "Best for challenging morphologies. GPU recommended for speed"
+
+[[phase_2_segmentation]]
+component_id = "tissue-segmentation-manual-annotation"
+name = "Tissue Region Segmentation - Manual Annotation"
+description = "Pathologist draws annotations for tissue compartments (tumor, stroma, necrosis, etc.)"
+typical_method_dev_hours = [
+    0.5,
+    1.0,
+]
+typical_compute_hours = [
+    3.0,
+    10.0,
+]
+software_dependencies = [
+    "QuPath",
+    "ASAP",
+]
+inputs = [
+    "H&E or multiplex images",
+    "Annotation guidelines",
+]
+outputs = [
+    "Annotation files (GeoJSON, XML)",
+]
+notes = "Pathologist time NOT included in compute hours - track separately"
+
+[[phase_2_segmentation]]
+component_id = "tissue-segmentation-ai-classifier"
+name = "Tissue Region Segmentation - AI Classifier"
+description = "Train and apply pixel/patch classifier for tissue compartments"
+typical_method_dev_hours = [
+    5.0,
+    20.0,
+]
+typical_compute_hours = [
+    4.0,
+    12.0,
+]
+software_dependencies = [
+    "QuPath",
+    "scikit-learn",
+    "tensorflow",
+]
+inputs = [
+    "Images",
+    "Training annotations from pathologist",
+]
+outputs = [
+    "Tissue classification masks",
+    "Classifier model file",
+    "Validation metrics (accuracy, IoU)",
+]
+notes = "Method dev includes annotation rounds, training, validation. May require 2-3 iterations with pathologist feedback"
+
+[[phase_2_segmentation]]
+component_id = "roi-selection-pathologist"
+name = "ROI Selection by Pathologist"
+description = "Pathologist identifies regions of interest for analysis (e.g., tumor-rich areas, tertiary lymphoid structures)"
+typical_method_dev_hours = [
+    0.5,
+    1.0,
+]
+typical_compute_hours = [
+    2.0,
+    8.0,
+]
+software_dependencies = [
+    "QuPath",
+]
+inputs = [
+    "Whole slide images or large FOVs",
+]
+outputs = [
+    "ROI coordinates/polygons",
+]
+notes = "Time scales with slide count and complexity. Pathologist time tracked separately"
+
+[[phase_3_feature_extraction]]
+component_id = "marker-thresholding-binary"
+name = "Marker Thresholding - Binary (Positive/Negative)"
+description = "Per-marker intensity thresholding to call positive vs. negative cells"
+typical_method_dev_hours = [
+    3.0,
+    6.0,
+]
+typical_compute_hours = [
+    4.0,
+    10.0,
+]
+software_dependencies = [
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "seaborn",
+]
+inputs = [
+    "Cell feature table (mean intensities per marker)",
+    "Virtual tiled image for threshold optimization",
+]
+outputs = [
+    "Binary calls (CSV: cell_id, marker1_pos, marker2_pos, ...)",
+    "Threshold values (JSON/YAML)",
+]
+notes = "Method dev includes pathologist validation rounds. Typical 2-3 iterations per marker"
+
+[[phase_3_feature_extraction]]
+component_id = "marker-thresholding-hscore"
+name = "Marker Thresholding - H-Score (0/1+/2+/3+)"
+description = "Four-level semi-quantitative scoring for each marker"
+typical_method_dev_hours = [
+    3.5,
+    7.0,
+]
+typical_compute_hours = [
+    5.0,
+    12.0,
+]
+software_dependencies = [
+    "pandas",
+    "numpy",
+]
+inputs = [
+    "Cell feature table",
+]
+outputs = [
+    "H-score calls (CSV)",
+    "Threshold triplets (JSON)",
+    "H-score summary per ROI/sample",
+]
+notes = "Requires 3 thresholds per marker. More pathologist time than binary"
+
+[[phase_3_feature_extraction]]
+component_id = "composite-classifier-rule-based"
+name = "Composite Cell Classifier - Rule-Based"
+description = "Combine multiple markers using Boolean logic (e.g., CD68+ AND CD163+ = M2 macrophage)"
+typical_method_dev_hours = [
+    2.0,
+    4.0,
+]
+typical_compute_hours = [
+    2.0,
+    5.0,
+]
+software_dependencies = [
+    "pandas",
+]
+inputs = [
+    "Binary marker calls",
+    "Cell phenotype definitions (YAML)",
+]
+outputs = [
+    "Cell phenotype assignments (CSV)",
+]
+notes = "Fast and interpretable. Good for well-defined phenotypes"
+
+[[phase_3_feature_extraction]]
+component_id = "composite-classifier-ml"
+name = "Composite Cell Classifier - Machine Learning"
+description = "Train supervised ML model (Random Forest, SVM, or CNN) for cell phenotyping"
+typical_method_dev_hours = [
+    10.0,
+    30.0,
+]
+typical_compute_hours = [
+    5.0,
+    15.0,
+]
+software_dependencies = [
+    "scikit-learn",
+    "tensorflow",
+    "cellsighter",
+]
+inputs = [
+    "Cell feature table",
+    "Training labels (manual or gated)",
+]
+outputs = [
+    "Cell phenotype predictions",
+    "Model file",
+    "Validation metrics (confusion matrix, F1)",
+]
+notes = "CellSighter ensemble approach requires significant method dev. Pro-bono in some projects"
+
+[[phase_3_feature_extraction]]
+component_id = "spatial-feature-distance-calculation"
+name = "Spatial Features - Distance Calculations"
+description = "Calculate distances between cell types or to tissue boundaries (e.g., TILs to tumor border)"
+typical_method_dev_hours = [
+    2.0,
+    4.0,
+]
+typical_compute_hours = [
+    3.0,
+    8.0,
+]
+software_dependencies = [
+    "scipy",
+    "scikit-image",
+    "shapely",
+]
+inputs = [
+    "Cell centroids",
+    "Cell phenotypes",
+    "Tissue masks",
+]
+outputs = [
+    "Distance measurements (CSV)",
+]
+notes = "Useful for tumor microenvironment analysis"
+
+[[phase_3_feature_extraction]]
+component_id = "spatial-feature-neighborhood"
+name = "Spatial Features - Neighborhood Analysis"
+description = "Identify spatial neighborhoods using Delaunay triangulation, k-NN graphs, or spatial clustering"
+typical_method_dev_hours = [
+    3.0,
+    6.0,
+]
+typical_compute_hours = [
+    4.0,
+    10.0,
+]
+software_dependencies = [
+    "scipy",
+    "scikit-learn",
+    "squidpy",
+]
+inputs = [
+    "Cell centroids",
+    "Cell phenotypes",
+]
+outputs = [
+    "Neighborhood assignments",
+    "Spatial graphs",
+]
+notes = "Can reveal cellular niches and microenvironments"
+
+[[phase_3_feature_extraction]]
+component_id = "spatial-feature-smoothed-intensity"
+name = "Spatial Features - Smoothed Marker Intensities"
+description = "Average marker intensities within spatial radius for each cell"
+typical_method_dev_hours = [
+    2.0,
+    4.0,
+]
+typical_compute_hours = [
+    3.0,
+    8.0,
+]
+software_dependencies = [
+    "scipy",
+    "numpy",
+]
+inputs = [
+    "Cell coordinates",
+    "Marker intensities",
+]
+outputs = [
+    "Smoothed intensity table (CSV)",
+]
+notes = "Identifies regions of high/low marker expression independent of cell boundaries"
+
+[[phase_4_analysis_visualization]]
+component_id = "clustering-leiden"
+name = "Clustering - Leiden Algorithm"
+description = "Graph-based clustering on marker expression or PCA space"
+typical_method_dev_hours = [
+    1.5,
+    3.0,
+]
+typical_compute_hours = [
+    2.0,
+    6.0,
+]
+software_dependencies = [
+    "scanpy",
+    "leidenalg",
+    "igraph",
+]
+inputs = [
+    "AnnData object or feature matrix",
+]
+outputs = [
+    "Cluster assignments",
+    "UMAP with clusters",
+]
+notes = "Standard for single-cell and spatial transcriptomics"
+
+[[phase_4_analysis_visualization]]
+component_id = "clustering-phenograph"
+name = "Clustering - PhenoGraph"
+description = "K-nearest neighbor graph clustering for high-dimensional cytometry data"
+typical_method_dev_hours = [
+    1.5,
+    3.0,
+]
+typical_compute_hours = [
+    2.0,
+    6.0,
+]
+software_dependencies = [
+    "phenograph",
+    "numpy",
+]
+inputs = [
+    "Feature matrix (cells x markers)",
+]
+outputs = [
+    "Cluster assignments",
+]
+notes = "Good for CyTOF/imaging mass cytometry"
+
+[[phase_4_analysis_visualization]]
+component_id = "clustering-banksy-spatial"
+name = "Clustering - BANKSY (Spatial-Aware)"
+description = "Spatially-aware clustering incorporating neighborhood information"
+typical_method_dev_hours = [
+    3.0,
+    6.0,
+]
+typical_compute_hours = [
+    4.0,
+    10.0,
+]
+software_dependencies = [
+    "banksy-py",
+    "scanpy",
+]
+inputs = [
+    "AnnData with spatial coordinates",
+]
+outputs = [
+    "Spatial domains",
+    "Cluster assignments",
+]
+notes = "Captures spatial tissue organization beyond cell types"
+
+[[phase_4_analysis_visualization]]
+component_id = "dimensionality-reduction-umap"
+name = "Dimensionality Reduction - UMAP"
+description = "2D embedding of high-dimensional data for visualization"
+typical_method_dev_hours = [
+    1.0,
+    2.0,
+]
+typical_compute_hours = [
+    1.5,
+    4.0,
+]
+software_dependencies = [
+    "umap-learn",
+    "scanpy",
+]
+inputs = [
+    "Feature matrix",
+]
+outputs = [
+    "UMAP coordinates",
+    "UMAP plot",
+]
+notes = "Standard for visualizing cell populations"
+
+[[phase_4_analysis_visualization]]
+component_id = "dimensionality-reduction-pca"
+name = "Dimensionality Reduction - PCA"
+description = "Principal component analysis for feature reduction and variance explanation"
+typical_method_dev_hours = [
+    1.0,
+    2.0,
+]
+typical_compute_hours = [
+    1.0,
+    3.0,
+]
+software_dependencies = [
+    "scikit-learn",
+    "scanpy",
+]
+inputs = [
+    "Feature matrix",
+]
+outputs = [
+    "PC coordinates",
+    "Variance explained plot",
+]
+notes = "Often used before clustering or UMAP"
+
+[[phase_4_analysis_visualization]]
+component_id = "statistical-analysis-correlation"
+name = "Statistical Analysis - Correlation & Regression"
+description = "Correlation analysis between variables (e.g., EC activation vs TIL infiltration)"
+typical_method_dev_hours = [
+    2.0,
+    4.0,
+]
+typical_compute_hours = [
+    2.0,
+    5.0,
+]
+software_dependencies = [
+    "scipy",
+    "statsmodels",
+    "pandas",
+]
+inputs = [
+    "Summary statistics per ROI/sample",
+]
+outputs = [
+    "Correlation matrices",
+    "Regression plots with R-values",
+    "Statistical test results (CSV)",
+]
+notes = "Common for biomarker discovery and hypothesis testing"
+
+[[phase_4_analysis_visualization]]
+component_id = "statistical-analysis-differential-abundance"
+name = "Statistical Analysis - Differential Abundance"
+description = "Test for differences in cell type proportions or marker expression between groups"
+typical_method_dev_hours = [
+    2.5,
+    5.0,
+]
+typical_compute_hours = [
+    2.0,
+    6.0,
+]
+software_dependencies = [
+    "scipy",
+    "statsmodels",
+    "scanpy",
+]
+inputs = [
+    "Cell counts/proportions per sample",
+    "Sample metadata (groups)",
+]
+outputs = [
+    "Statistical test results",
+    "Volcano plots",
+    "Bar plots with error bars",
+]
+notes = "Use appropriate test for sample size and distribution"
+
+[[phase_4_analysis_visualization]]
+component_id = "visualization-heatmap"
+name = "Visualization - Heatmaps"
+description = "Generate heatmaps of marker expression, H-scores, or cell proportions across samples/regions"
+typical_method_dev_hours = [
+    1.0,
+    2.0,
+]
+typical_compute_hours = [
+    1.0,
+    3.0,
+]
+software_dependencies = [
+    "seaborn",
+    "matplotlib",
+    "scanpy",
+]
+inputs = [
+    "Summary tables (markers x samples)",
+]
+outputs = [
+    "Heatmap images (PNG/PDF)",
+]
+notes = "Standard visualization for multiplex data"
+
+[[phase_4_analysis_visualization]]
+component_id = "visualization-scatter-regression"
+name = "Visualization - Scatter Plots with Regression"
+description = "Scatter plots with linear regression lines and statistics"
+typical_method_dev_hours = [
+    1.0,
+    2.0,
+]
+typical_compute_hours = [
+    1.0,
+    3.0,
+]
+software_dependencies = [
+    "seaborn",
+    "matplotlib",
+    "scipy",
+]
+inputs = [
+    "Paired measurements per ROI/sample",
+]
+outputs = [
+    "Scatter plots with best-fit lines",
+    "R-values, p-values annotated",
+]
+notes = "Common for correlation analyses (e.g., 7Hills EC-TIL plots)"
+
+[[phase_4_analysis_visualization]]
+component_id = "visualization-spatial-overlay"
+name = "Visualization - Spatial Overlays"
+description = "Overlay cell phenotypes, clusters, or markers on tissue images"
+typical_method_dev_hours = [
+    2.0,
+    4.0,
+]
+typical_compute_hours = [
+    2.0,
+    6.0,
+]
+software_dependencies = [
+    "matplotlib",
+    "napari",
+    "squidpy",
+    "scanpy",
+]
+inputs = [
+    "Tissue images",
+    "Cell coordinates",
+    "Cell annotations",
+]
+outputs = [
+    "Spatial overlay images",
+]
+notes = "Essential for spatial biology papers"
+
+[[phase_5_multimodal]]
+component_id = "image-registration-valis"
+name = "Image Registration - VALIS"
+description = "Align multimodal images (e.g., Visium HD, COMET, MSI) using VALIS"
+typical_method_dev_hours = [
+    8.0,
+    20.0,
+]
+typical_compute_hours = [
+    5.0,
+    15.0,
+]
+software_dependencies = [
+    "valis-wsi",
+    "pyvips",
+    "libvips",
+]
+inputs = [
+    "Multi-modal images (TIFF, OME-TIFF)",
+]
+outputs = [
+    "Registered images (OME-TIFF)",
+    "Transformation matrices (pickle)",
+    "Alignment QC overlays (PNG)",
+]
+notes = "libvips must be installed as system library BEFORE conda env. See INSTALL.md"
+
+[[phase_5_multimodal]]
+component_id = "coordinate-transformation"
+name = "Coordinate Transformation for Multimodal Data"
+description = "Apply transformation matrices to align spatial coordinates across modalities"
+typical_method_dev_hours = [
+    3.0,
+    6.0,
+]
+typical_compute_hours = [
+    2.0,
+    5.0,
+]
+software_dependencies = [
+    "numpy",
+    "pandas",
+    "anndata",
+]
+inputs = [
+    "Transformation matrices from VALIS",
+    "AnnData objects with spatial coords",
+]
+outputs = [
+    "Aligned AnnData objects",
+    "Transformed coordinate columns",
+]
+notes = "Enables cross-modality spatial analysis"
+
+[[phase_5_multimodal]]
+component_id = "cross-modality-validation"
+name = "Cross-Modality Validation & QC"
+description = "Visual inspection of registration quality, overlay RGB composites"
+typical_method_dev_hours = [
+    2.0,
+    4.0,
+]
+typical_compute_hours = [
+    2.0,
+    5.0,
+]
+software_dependencies = [
+    "matplotlib",
+    "napari",
+]
+inputs = [
+    "Registered images from multiple modalities",
+]
+outputs = [
+    "QC overlay images",
+    "Registration quality report",
+]
+notes = "Check for colored fringes indicating misalignment"
+
+[[phase_6_reporting]]
+component_id = "methods-writeup"
+name = "Methods Section Writeup"
+description = "Document all analysis methods for manuscript, abstract, or progress report"
+typical_method_dev_hours = [
+    3.0,
+    8.0,
+]
+typical_compute_hours = [
+    0.0,
+    0.0,
+]
+software_dependencies = []
+inputs = [
+    "Analysis scripts and notebooks",
+    "Software versions",
+]
+outputs = [
+    "Methods text (Word/LaTeX)",
+]
+notes = "Time varies based on complexity and publication venue requirements"
+
+[[phase_6_reporting]]
+component_id = "figure-generation"
+name = "Publication-Quality Figure Generation"
+description = "Create multi-panel figures with proper formatting for manuscripts"
+typical_method_dev_hours = [
+    4.0,
+    12.0,
+]
+typical_compute_hours = [
+    2.0,
+    6.0,
+]
+software_dependencies = [
+    "matplotlib",
+    "seaborn",
+    "adobe-illustrator",
+    "inkscape",
+]
+inputs = [
+    "Individual plots and images",
+]
+outputs = [
+    "Multi-panel figures (PDF/SVG)",
+]
+notes = "Iterations with client may extend time"
+
+[[phase_6_reporting]]
+component_id = "data-table-export"
+name = "Data Table Export for Client"
+description = "Export all analysis results as structured CSV/Excel files"
+typical_method_dev_hours = [
+    1.0,
+    3.0,
+]
+typical_compute_hours = [
+    1.0,
+    3.0,
+]
+software_dependencies = [
+    "pandas",
+]
+inputs = [
+    "Analysis outputs (various formats)",
+]
+outputs = [
+    "Standardized CSV/Excel tables",
+    "Data dictionary",
+]
+notes = "Ensure reproducibility and client usability"
+
+[[phase_7_special]]
+component_id = "ficture-spatial-factorization"
+name = "FICTURE Spatial Factorization Pipeline"
+description = "Run FICTURE/punkst pipeline for spatial topic modeling on Visium HD data"
+typical_method_dev_hours = [
+    10.0,
+    25.0,
+]
+typical_compute_hours = [
+    15.0,
+    40.0,
+]
+software_dependencies = [
+    "punkst",
+    "make",
+    "slurm",
+]
+inputs = [
+    "Visium HD binned outputs",
+]
+outputs = [
+    "Factor loadings per hexagon",
+    "Pixel-level factor decode",
+    "Spatial factor visualizations",
+    "Differential expression per factor",
+]
+notes = "Requires HPC cluster. Makefile-driven workflow. Config in JSON"
+
+[[phase_7_special]]
+component_id = "qupath-script-custom"
+name = "Custom QuPath Groovy Scripting"
+description = "Develop custom QuPath scripts for project-specific needs (e.g., threshold adjustment UI)"
+typical_method_dev_hours = [
+    5.0,
+    15.0,
+]
+typical_compute_hours = [
+    2.0,
+    8.0,
+]
+software_dependencies = [
+    "QuPath",
+]
+inputs = [
+    "Project requirements",
+]
+outputs = [
+    "QuPath .groovy scripts",
+    "Documentation",
+]
+notes = "7Hills project used custom threshold adjustment scripts"

@@ -1,0 +1,20 @@
+# What are you actually trying to do / what is the goal of this project.
+The ultimate goal of what I want to build is something to help my team deliver on data analysis projects faster. 
+
+Currently, we quote on analysis projects that come in, by taking as detailed an inventory of what the customer is looking for, and then turning that inventory into a statement of work (SOW) that fits their questions into a set of tasks that my analysts can perform. Once the list of tasks is identified, we come up with a number to quote on, and then they transfer files and work begins. However, often there is a loss of both communication and deliverables when the task is transferred from the client, through me, to the data analyst tasked with doing the work, in part due to differences in background biological or computational knowledge, imperfect instructions that are not fully delivered alongside the data, and from analysts working from previous scripts without a proper understanding of what is involved in bringing the required analysis to bear on the topic. 
+
+I want to build a solution that overcomes and solves these problems, in several ways:
+1. I want an automated AI solution to be able to more seamlessly read from a detailed SOW that we have generated, and come up with specific action items and to dos from that list, that can then be tweaked and edited as need be for clarity.
+2. I want an automated AI solution to propose the hardware and software needed to perform a particular task, including any dependencies needed, and approximate computational cost, for each of the items in the list, based on some knowledge (either identified or derived) from the existing knowledge of the data sizes we are working with or other appropriate information.
+3. I want this to also be applied to projects that are at various phases of development, including projects that have already completed some elements of the SOW, in order to get as complete an overview of all steps in the process as possible, at as granular a level as needed.
+4. I want a system to track this and convert the completed SOW tasks back into completed milestones on a “milestone tracker” that we can use both to track progress internally, and as a way of signalling back to the client where things are and what the next steps are in the process.
+5. I want to specifically identify any estimated timelines that are identified throughout the documents and ensure that clarity is achieved on those timelines, so that any deviations - say if an analyst is sick- is clarified and updated so that we can get back to the client on any potential deviations, and where necessary install work arounds.
+6. I want this system to be able to learn as new tasks are brought in, so that we can adapt it to new analyses, and so that existing analyses can become easier / more automated as we work on them.
+
+The existing “process” is somewhat nonexistent at the moment - I have drafted some overarching structural documents based on feedback from ChatGPT and Claude - relevant chatgpt thread: https://chatgpt.com/share/69466b63-23c0-800c-8af1-3d7495f98f19 and associated operational github folder: https://github.com/AstraeaBio/astraea-ops 
+
+But this is an attempt to start with an overall “project goal” - what are you actually trying to do / what is the goal of this project.
+
+# What are the milestones / functionality that you want to achieve?
+For the MVP of this project, I want to have a basic system where I can feed the system an existing script from a data analyst, have it break the script down into its component parts, and also map the statement of work to a similar script of components, drawn from a constructed but defined “list of data analysis processing components” that we can initially populate from either SOWs or scripts, but that should become well structured and coherent over time, not splinter off too much. There will always be edge cases, but we want to figure out as we go here what elements we can reuse and what we need custom scripts to handle.
+

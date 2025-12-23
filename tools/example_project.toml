@@ -1,0 +1,195 @@
+# Example Project TOML - Liver Allograft Rejection Study
+# This is a template showing the full structure
+# Copy and modify for new projects
+
+project_id = "SOW-PAI-MYM-121"
+project_name = "Liver Allograft Rejection Study"
+client = "Mayo Clinic - Dr. Priya Alexander"
+pm = "Trang Vu"
+analyst_primary = "Sharon"
+start_date = "2024-07-19"
+estimated_completion = "2024-10-04"
+status = "in_progress"  # draft | in_progress | completed | on_hold
+
+[sow]
+version = 1
+total_cost_usd = 16800
+
+[[sow.milestones]]
+milestone_id = 1
+name = "Image Receipt & Segmentation"
+cost_usd = 6200
+status = "completed"
+completed_date = "2024-08-15"
+
+[[sow.milestones]]
+milestone_id = 2
+name = "Classification & Spatial Analysis"
+cost_usd = 10600
+status = "in_progress"
+estimated_completion = "2024-10-04"
+
+[data]
+platform = "Imaging Mass Cytometry"
+n_samples = 47
+n_rois = 141
+markers = 40
+input_location = "gs://mayo-liver-project/raw_data/"
+output_location = "gs://mayo-liver-project/processed/"
+
+[[components]]
+component_id = "img-qc-001"
+name = "Data Receipt & Cloud Storage Setup"
+status = "completed"
+assigned_to = "Sharon"
+method_dev_hours = 1.5
+compute_hours = 2.5
+sow_allocated_hours = 4.0
+time_used_hours = 3.8
+progress_fraction = 1.0
+priority = "high"
+dependencies = []
+notes = "All 141 ROIs passed QC. Minor background noise in 3 ROIs flagged for post-processing."
+
+[[components.inputs]]
+type = "ome-tiff"
+location = "gs://mayo-liver-project/raw_data/ROI*.ome.tiff"
+arrived_date = "2024-07-20"
+
+[[components.outputs]]
+type = "qc-report"
+location = "gs://mayo-liver-project/qc/image_qc_summary.csv"
+created_date = "2024-07-22"
+
+[[components]]
+component_id = "seg-001"
+name = "Cell Segmentation - StarDist"
+status = "completed"
+assigned_to = "Sharon"
+method_dev_hours = 2.5
+compute_hours = 4.5
+sow_allocated_hours = 7.0
+time_used_hours = 6.2
+progress_fraction = 1.0
+priority = "high"
+dependencies = ["img-qc-001"]
+notes = "Optimized for liver tissue. Nucleus channel: DNA1. Cytoplasm expansion: 2px."
+
+[[components.inputs]]
+type = "ome-tiff"
+location = "gs://mayo-liver-project/raw_data/"
+
+[[components.outputs]]
+type = "geojson"
+location = "gs://mayo-liver-project/segmentation/cell_masks/"
+
+[[components.outputs]]
+type = "csv"
+location = "gs://mayo-liver-project/segmentation/cell_features.csv"
+created_date = "2024-08-10"
+
+[[components]]
+component_id = "thresh-001"
+name = "Marker Thresholding - Binary (Positive/Negative)"
+status = "in_progress"
+assigned_to = "Sharon"
+method_dev_hours = 3.5
+compute_hours = 6.5
+sow_allocated_hours = 10.0
+time_used_hours = 4.2
+progress_fraction = 0.42
+priority = "high"
+notes = "20/40 markers completed. Pathologist review scheduled 2024-09-10."
+dependencies = ["seg-001"]
+
+[[components.inputs]]
+type = "csv"
+location = "gs://mayo-liver-project/segmentation/cell_features.csv"
+
+[[components.outputs]]
+type = "csv"
+location = "gs://mayo-liver-project/thresholding/binary_calls.csv"
+expected_date = "2024-09-15"
+
+[[components.blockers]]
+issue = "Awaiting pathologist validation on CD68 threshold"
+raised_date = "2024-09-01"
+severity = "medium"
+
+[[components]]
+component_id = "spatial-001"
+name = "Spatial Features - Distance Calculations"
+status = "not_started"
+assigned_to = "Sharon"
+method_dev_hours = 2.0
+compute_hours = 3.0
+sow_allocated_hours = 5.0
+time_used_hours = 0.0
+progress_fraction = 0.0
+priority = "medium"
+dependencies = ["thresh-001"]
+notes = "Calculate TIL distance to bile ducts and portal tracts"
+
+[[components.inputs]]
+type = "csv"
+location = "gs://mayo-liver-project/thresholding/binary_calls.csv"
+
+[[components.outputs]]
+type = "csv"
+location = "gs://mayo-liver-project/spatial/distance_measurements.csv"
+expected_date = "2024-09-20"
+
+[[components]]
+component_id = "viz-001"
+name = "Visualization - Heatmaps"
+status = "not_started"
+assigned_to = "Sharon"
+method_dev_hours = 1.0
+compute_hours = 2.0
+sow_allocated_hours = 3.0
+time_used_hours = 0.0
+progress_fraction = 0.0
+priority = "low"
+dependencies = ["spatial-001"]
+notes = "Generate marker x region and cell type x sample heatmaps for manuscript"
+
+[[components.inputs]]
+type = "csv"
+location = "gs://mayo-liver-project/analysis/summary_stats.csv"
+
+[[components.outputs]]
+type = "png"
+location = "gs://mayo-liver-project/figures/heatmaps/"
+expected_date = "2024-09-28"
+
+[timeline]
+client_deadline = "2024-10-04"
+internal_deadline = "2024-09-28"
+buffer_days = 6
+
+[[timeline.flags]]
+type = "caution"
+component_id = "thresh-001"
+message = "Time used approaching allocated, but progress on track"
+raised_date = "2024-09-05"
+
+[[change_orders]]
+change_order_id = 1
+date = "2024-08-20"
+description = "Added 10 additional ROIs per client request"
+sow_version = 2
+cost_delta_usd = 1200
+approved = true
+approved_by = "Bruce E. Goff"
+
+[[code_repository]]
+script = "1_preprocess_liver.ipynb"
+component_ids = ["img-qc-001", "seg-001"]
+location = "Sharon_scripts/1_preprocess_liver.ipynb"
+last_modified = "2024-08-10"
+
+[[code_repository]]
+script = "2a_phenotype.ipynb"
+component_ids = ["thresh-001"]
+location = "Sharon_scripts/2a_phenotype.ipynb"
+last_modified = "2024-09-05"
