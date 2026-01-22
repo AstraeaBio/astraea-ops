@@ -1,0 +1,74 @@
+# Portfolio Manifest
+# This file defines which projects are tracked in the portfolio view
+# You can create multiple portfolio files for different subsets of projects
+
+portfolio_name = "Astraea Active Projects"
+portfolio_id = "main"
+last_updated = "2025-12-22"
+
+# Projects to track in this portfolio
+# Paths are relative to this file's location, or absolute
+[[projects]]
+path = "project.toml"  # Example project in same directory
+active = true
+notes = "Example liver allograft rejection study"
+
+# Add your active projects here:
+# [[projects]]
+# path = "../../projects/mayo_liver/project.toml"
+# active = true
+# notes = "Mayo Clinic liver rejection project"
+#
+# [[projects]]
+# path = "../../projects/cellsighter/project.toml"
+# active = true
+# notes = "CellSighter melanoma classifier"
+#
+# [[projects]]
+# path = "../../projects/7hills/project.toml"
+# active = false  # Completed, keep for historical data
+# notes = "7Hills tumor-vessel analysis (completed)"
+
+# Analyst capacity configuration
+# Defines available hours per day for each analyst
+[analyst_capacity]
+Sharon = 6.0  # 6 hours per day available for project work
+Tom = 4.0     # 4 hours per day (part-time)
+Alex = 8.0    # 8 hours per day (full-time)
+
+# Time conversion settings
+[time_settings]
+hours_per_day = 3.0  # Conservative estimate: 3 hours of productive work per day
+workdays_per_week = 5
+
+# Logging configuration
+[logging]
+enabled = true
+daily_snapshot = true
+log_directory = "../../logs/"  # Relative to this file
+log_format = "json"  # json | csv
+retention_days = 90  # Keep logs for 90 days
+
+# Portfolio priorities
+# Projects can override this with their own priority field
+[defaults]
+default_priority = "medium"
+default_buffer_days = 7
+
+# Batch processing configuration
+[batching]
+# Auto-detect batch candidates based on these criteria
+enabled = true
+min_batch_size = 2  # Minimum tasks to suggest batching
+same_platform_required = true  # Tasks must be on same platform (IMC, CyCIF, etc.)
+same_component_type_required = true  # Tasks must be same type (segmentation, etc.)
+same_status_required = true  # Tasks must be in same status (not_started, etc.)
+
+# Which component types are batchable
+batchable_components = [
+    "cell-segmentation-stardist",
+    "cell-segmentation-mesmer",
+    "cell-segmentation-cellpose",
+    "marker-thresholding",
+    "spatial-feature-distance",
+]

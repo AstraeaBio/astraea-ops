@@ -1,4 +1,4 @@
-# Analysis Architect - Project Tracker v1.0
+# Analysis Architect - Project Tracker v1.1
 
 **Automate project planning and tracking for spatial biology image analysis projects**
 
@@ -7,11 +7,21 @@
 ## 🎯 What This Does
 
 Analysis Architect helps your team:
+
+### Single Project Tracking
 - ✅ **Parse SOWs faster** - Use LLM to extract project structure from PDF SOWs
 - ✅ **Track progress in real-time** - Simple web UI for analysts to update status
 - ✅ **Flag delays early** - Traffic light system (🟢🟡🔴) alerts when projects drift
 - ✅ **Generate client updates** - Auto-generate status summaries for client comms
 - ✅ **Learn from history** - Canonical component library improves time estimates
+
+### Portfolio Management (NEW in v1.1)
+- 🌐 **Multi-project visibility** - See all active projects in one dashboard
+- 🚨 **Tuesday Morning Standup** - Immediate attention items (overdue, blocked, high utilization)
+- 👥 **Analyst workload** - Who's overloaded, who has capacity across all projects
+- ⚡ **Batch opportunities** - Auto-detect similar tasks to run together (GPU segmentation, reviews)
+- 📅 **Timeline overview** - Portfolio-wide deadline tracking
+- 📊 **Historical logging** - Daily snapshots for trend analysis
 
 ---
 
@@ -46,6 +56,27 @@ The UI will open in your browser at `http://localhost:8501`
 2. Edit project details manually
 3. Open in the web UI
 
+### 4. Set Up Portfolio View (Optional)
+
+Track multiple projects simultaneously:
+
+1. Create a `portfolio.toml` file:
+   ```bash
+   cp example_portfolio.toml my_portfolio.toml
+   ```
+
+2. Edit `my_portfolio.toml` to list your projects:
+   ```toml
+   [[projects]]
+   path = "projects/mayo_liver/project.toml"
+   active = true
+   ```
+
+3. In the UI sidebar, enter the path to `my_portfolio.toml`
+4. Click the **"🌐 Portfolio Overview"** tab
+
+See [PORTFOLIO_QUICKSTART.md](PORTFOLIO_QUICKSTART.md) for detailed guide.
+
 ---
 
 ## 📁 Project Structure
@@ -54,12 +85,17 @@ The UI will open in your browser at `http://localhost:8501`
 analysis-architect/
 ├── components_library.toml       # Canonical library of ~40 analysis components
 ├── project_tracker_ui.py         # Streamlit web UI for tracking
+├── portfolio_lib.py              # Portfolio management functions (NEW)
+├── portfolio.toml                # Portfolio manifest example (NEW)
+├── example_portfolio.toml        # Portfolio template (NEW)
 ├── sow_parser_prompt.md          # LLM prompt for SOW parsing
 ├── example_project.toml          # Template for new projects
 ├── requirements.txt              # Python dependencies
 ├── LICENSE                       # MIT License
 ├── .gitignore                    # Git ignore rules
-└── README.md                     # This file
+├── README.md                     # This file
+├── PORTFOLIO_QUICKSTART.md       # Portfolio user guide (NEW)
+└── PORTFOLIO_REQUIREMENTS.md     # Portfolio specifications (NEW)
 
 your_projects/
 ├── mayo_liver/
@@ -70,6 +106,9 @@ your_projects/
 │       └── 1_preprocess.ipynb
 └── 7hills_melanoma/
     └── project.toml
+
+logs/                             # Historical snapshots (NEW)
+└── portfolio_2025-12-22.json
 ```
 
 ---
@@ -115,6 +154,28 @@ your_projects/
    - In-progress components with % complete
    - Upcoming deliverables and dates
    - No internal details (hours, blockers stay private)
+
+### **PM: Portfolio Management (NEW)**
+
+**Tuesday Morning Standup (< 5 minutes):**
+
+1. **Load portfolio.toml** in UI sidebar
+2. **Go to "Portfolio Overview" tab**
+3. **Check "Immediate Attention" section**:
+   - Any blocked tasks? → Unblock them TODAY
+   - Any overdue items? → Create action plan
+   - Any high utilization (>85%)? → Add hours or reassign
+4. **Review "Analyst Workload"**:
+   - Anyone overloaded? → Reallocate work
+   - Anyone under 50%? → Assign new tasks
+5. **Check "Batch Opportunities"**:
+   - Schedule GPU runs for similar segmentation tasks
+   - Schedule pathologist review sessions for multiple projects
+6. **Review "Timeline"**:
+   - What's due this week? → Ensure on track
+   - What's overdue? → Prioritize
+
+**Result:** Full portfolio visibility in under 5 minutes!
 
 ---
 
@@ -307,18 +368,28 @@ pip install --upgrade streamlit
 
 ## 📚 Next Steps
 
-### For v1:
+### For v1.1 (Current Release):
 1. ✅ Parse your first 3 SOWs and create project.toml files
 2. ✅ Train analysts to use the web UI for daily updates
 3. ✅ Customize component library based on your specific workflows
 4. ✅ Generate client summaries weekly
+5. ✅ **Set up portfolio.toml for multi-project tracking**
+6. ✅ **Use Tuesday Morning Standup dashboard**
+7. ✅ **Track analyst workload across projects**
+8. ✅ **Identify batch processing opportunities**
+
+### For v1.2 (In Development):
+- [ ] Filtering in Portfolio View (by analyst, priority, component type, platform)
+- [ ] Batch assignment actions (mark all as in progress, assign to analyst)
+- [ ] Historical trend charts (velocity, estimate accuracy)
+- [ ] Completion forecasting based on historical data
 
 ### For v2 (Future):
 - [ ] Auto-parse SOW PDFs (OCR + LLM in one step)
 - [ ] Slack/email notifications when components turn 🔴
-- [ ] Historical time tracking (learn typical hours per tissue type)
 - [ ] Integration with git commits (auto-update component status from pushes)
 - [ ] Vector embeddings for smarter SOW→component matching
+- [ ] Mobile-friendly analyst updates
 
 ---
 

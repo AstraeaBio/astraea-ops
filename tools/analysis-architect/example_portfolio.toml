@@ -1,0 +1,64 @@
+# Example Portfolio Configuration
+# Copy this file and customize for your portfolio
+
+portfolio_name = "My Custom Portfolio"
+portfolio_id = "custom-001"
+last_updated = "2025-12-22"
+
+# Example: Track projects in a separate directory
+[[projects]]
+path = "/path/to/projects/mayo_liver/project.toml"
+active = true
+notes = "Mayo Clinic liver rejection study"
+
+[[projects]]
+path = "/path/to/projects/cellsighter/project.toml"
+active = true
+notes = "CellSighter melanoma classifier"
+
+[[projects]]
+path = "/path/to/projects/duke_kidney/project.toml"
+active = true
+notes = "Duke kidney transplant project"
+
+# Example: Archived project (active = false)
+[[projects]]
+path = "/path/to/projects/7hills/project.toml"
+active = false
+notes = "Completed - 7Hills tumor-vessel analysis"
+
+# Define your team's capacity
+[analyst_capacity]
+Sharon = 6.0
+Tom = 4.0
+Alex = 8.0
+Maria = 5.0
+
+[time_settings]
+hours_per_day = 3.0
+workdays_per_week = 5
+
+[logging]
+enabled = true
+daily_snapshot = true
+log_directory = "logs/"
+log_format = "json"
+retention_days = 90
+
+[defaults]
+default_priority = "medium"
+default_buffer_days = 7
+
+[batching]
+enabled = true
+min_batch_size = 2
+same_platform_required = true
+same_component_type_required = true
+same_status_required = true
+batchable_components = [
+    "cell-segmentation-stardist",
+    "cell-segmentation-mesmer",
+    "cell-segmentation-cellpose",
+    "marker-thresholding",
+    "spatial-feature-distance",
+]

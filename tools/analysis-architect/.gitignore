@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.Python
+build/
+dist/
+venv/
+env/
+.venv/
+*.pyc
+
+# Virtual environments (any location)
+**/venv/
+**/env/
+**/.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Streamlit
+.streamlit/
+**/.streamlit/
+
+# Claude Code
+.claude/
+**/.claude/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# Optional: Exclude project data if sensitive
+# Uncomment if projects/ contains client data:
+# projects/*/
+# !projects/README.md
+# !projects/example_project/

@@ -1,7 +1,0 @@
-# Analysis Architect - Project Tracker Requirements
-# Install with: pip install -r requirements.txt
-
-streamlit>=1.28.0
-tomli>=2.0.0  # TOML reading (Python 3.11+ has tomllib built-in)
-tomli-w>=1.0.0  # TOML writing
-pandas>=2.0.0

@@ -140,6 +140,30 @@ Start the YAML with:
 # Review and edit component breakdown before using
 ```
 
+## CRITICAL REQUIREMENTS ⚠️
+
+**BEFORE STARTING**: The following fields are **REQUIRED** for the project tracker to work. If any are missing from the SOW, you MUST:
+- Ask the PM to clarify, OR
+- Use reasonable defaults and add a note to review
+
+**REQUIRED FIELDS (will cause errors if missing):**
+
+1. **`sow.total_cost_usd`** (number) - Total project cost. If not in SOW, calculate from line items or ask PM.
+2. **`sow.milestones`** (list) - At least ONE milestone must be defined. If SOW has no milestones, create a default milestone covering the full project.
+   - Each milestone MUST have: `milestone_id`, `name`, `cost_usd`, `status`, `estimated_completion`
+3. **`components`** (list) - At least ONE component must be defined.
+4. **`estimated_completion`** (date in YYYY-MM-DD format) - Project completion date.
+
+**DEFAULT MILESTONE TEMPLATE** (if SOW has no explicit milestones):
+```yaml
+milestones:
+  - milestone_id: "m1"
+    name: "Full Project Delivery"
+    cost_usd: [SAME AS total_cost_usd]
+    status: "not_started"
+    estimated_completion: "[SAME AS estimated_completion]"
+```
+
 ## IMPORTANT GUIDELINES
 
 1. **Be conservative with time estimates**: If SOW says "segmentation - 10 hours", split into method_dev_hours: 3-4, compute_hours: 6-7

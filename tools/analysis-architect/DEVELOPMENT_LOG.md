@@ -148,6 +148,170 @@ Migrated all project and configuration files from YAML to TOML format to elimina
 
 ---
 
+## Session: "Portfolio Dashboard Implementation" (Dec 22-23, 2025)
+
+### Context
+Built multi-project portfolio dashboard to enable task-based workflow, resource allocation, and batch processing across multiple concurrent projects.
+
+### Requirements Captured
+
+#### Vision Statement
+Move from analyst-per-project model to modular task-based workflow where:
+- Analysts can easily switch between well-defined tasks across projects
+- Tasks have explicit inputs/outputs for hand-off to analysts or automated agents
+- PMs can quickly identify blockers and critical path items
+- Portfolio health is visible at a glance
+
+#### Primary Use Case: Tuesday Morning Standup
+PM wants to see in <5 minutes:
+- All outstanding projects
+- What's being worked on now
+- What's due soon / overdue
+- What's behind schedule
+- What can be done to unblock analysts TODAY
+
+### Decisions Made
+
+#### Architecture
+- **Portfolio manifest location**: User-configurable (`portfolio.toml` can be anywhere)
+- **Logging location**: Separate `logs/` directory at repo root
+- **Implementation approach**: Shared library (`portfolio_lib.py`) used by:
+  - Extended `project_tracker_ui.py` (Portfolio Overview tab)
+  - Future standalone `portfolio_dashboard.py`
+
+#### Batch Actions
+- Mark tasks as assigned
+- Log batch operations to file
+- Manual external triggering for v1.1
+- Full batch assignment actions planned for v1.2
+
+#### Next Task Logic
+- **Dependency-based**: Find `not_started` components with fulfilled dependencies
+- **Priority sorting**: High > medium > low
+- Enables non-sequential, flexible workflow
+
+### Implementation Completed
+
+#### Files Created
+- `portfolio_lib.py` - Shared portfolio management library
+- `portfolio.toml` - Portfolio manifest example
+- `example_portfolio.toml` - Template
+- `PORTFOLIO_REQUIREMENTS.md` - Detailed specifications
+- `PORTFOLIO_QUICKSTART.md` - User guide
+
+#### Files Updated
+- `project_tracker_ui.py` - Added Portfolio Overview tab
+- `README.md` - Added portfolio features section
+- `CLAUDE.md` - Added portfolio architecture documentation
+- `DEVELOPMENT_LOG.md` - This session
+
+#### Core Functions Implemented
+
+**`portfolio_lib.py`:**
+- `load_portfolio()` - Load manifest and all projects
+- `get_next_task()` - Identify next actionable task (dependency-based)
+- `detect_batch_candidates()` - Find batchable tasks across projects
+- `calculate_analyst_workload()` - Aggregate workload by analyst
+- `create_daily_snapshot()` - Historical logging to JSON
+- `get_immediate_attention_items()` - Tuesday morning view
+- `get_overdue_tasks()` - Helper for deadline tracking
+
+### Features Delivered
+
+#### Portfolio Overview Tab (in `project_tracker_ui.py`)
+1. **Portfolio Health Metrics**
+   - Active projects count
+   - Total tasks across portfolio
+   - Completion percentage
+   - Blocked items count
+
+2. **Immediate Attention Section**
+   - Blocked tasks (waiting on dependencies)
+   - High utilization tasks (>85% hours used)
+   - Overdue items (past deadline)
+   - Expandable cards with urgency indicators (🔴🟡🟢)
+
+3. **Analyst Workload**
+   - Hours used vs. allocated across ALL projects
+   - Utilization percentage with progress bars
+   - Project count per analyst
+   - Capacity indicators (➕ Capacity / ✓ Good / ⚠️ High)
+
+4. **Batch Opportunities**
+   - Auto-detect similar tasks across projects
+   - Group by component type + platform + status
+   - Configurable in `portfolio.toml`
+   - Placeholder batch actions (full implementation in v1.2)
+
+5. **Timeline Overview**
+   - Projects grouped by deadline: Overdue / This Week / Next Week / 2+ Weeks
+   - Quick visual scan of upcoming deliverables
+
+### Configuration Schema
+
+**Portfolio Manifest (`portfolio.toml`):**
+```toml
+portfolio_name = "Astraea Active Projects"
+portfolio_id = "main"
+
+[[projects]]
+path = "path/to/project.toml"
+active = true
+
+[analyst_capacity]
+Sharon = 6.0  # hours/day
+
+[time_settings]
+hours_per_day = 3.0
+
+[batching]
+enabled = true
+min_batch_size = 2
+batchable_components = [...]
+```
+
+**Daily Snapshot Log (`logs/portfolio_YYYY-MM-DD.json`):**
+- Portfolio summary (project counts, component status)
+- Analyst utilization (hours used/allocated per analyst)
+- Project details (progress, deadlines, next tasks)
+
+### Testing
+- ✅ Tested with example project data
+- ✅ UI compiles and runs successfully
+- ✅ Portfolio tab appears when portfolio.toml loaded
+- ✅ All core functions working as expected
+
+### Next Steps (v1.2)
+
+#### Planned Enhancements
+- [ ] Filtering in Portfolio View (analyst, priority, component type, platform)
+- [ ] Batch assignment actions (mark all as in progress, assign to analyst)
+- [ ] Historical trend charts from daily snapshots
+- [ ] Completion forecasting based on velocity data
+- [ ] Standalone `portfolio_dashboard.py` for portfolio-only view
+
+### Technical Notes
+
+**Key Design Patterns:**
+- Shared library pattern for code reuse
+- User-configurable portfolios (multiple portfolios supported)
+- Dependency-based task identification (not sequential)
+- Traffic light status system extended to portfolio level
+- JSON logs for historical tracking and trend analysis
+
+**Performance Considerations:**
+- Tested with 5-10 concurrent projects
+- Load time acceptable for current scale
+- Projects loaded on-demand, cached in session state
+- Future optimization: pre-aggregate data for faster rendering
+
+**Timeline Conversion:**
+- 3:1 hours-to-days ratio (conservative productivity estimate)
+- "Time from today" for realistic deadline calculation
+- Separate milestones for major phases (Image Receipt, Segmentation, Classification, Spatial Analysis)
+
+---
+
 ## Session History
 
 ### Session Template
@@ -177,17 +341,68 @@ Migrated all project and configuration files from YAML to TOML format to elimina
 
 ## Quick Reference: Key Files
 
-- `project_tracker_ui.py` - Main Streamlit app (500+ lines)
+**Core Application:**
+- `project_tracker_ui.py` - Main Streamlit app with Portfolio Overview tab
+- `portfolio_lib.py` - Shared portfolio management library
 - `components_library.toml` - Canonical component library (~40 components)
-- `example_project.toml` - Template for project structure
-- `sow_parser_prompt.md` - LLM prompt for SOW parsing
-- `CLAUDE.md` - Comprehensive developer guide
+
+**Configuration:**
+- `portfolio.toml` / `example_portfolio.toml` - Portfolio manifests
+- `example_project.toml` - Project template
+- `requirements.txt` - Universal dependencies (TOML libraries)
+
+**Documentation:**
+- `CLAUDE.md` - Developer guide with portfolio architecture
 - `README.md` - User-facing documentation
+- `PORTFOLIO_QUICKSTART.md` - Portfolio user guide
+- `PORTFOLIO_REQUIREMENTS.md` - Portfolio specifications
+- `DEVELOPMENT_LOG.md` - This file
 
 ## Quick Reference: Key Functions
 
+**Project Functions:**
 - `load_project_toml(filepath)` - Load project from TOML
 - `save_project_toml(filepath, data)` - Save project to TOML
 - `calculate_status(component)` - Traffic light logic
 - `generate_client_summary(project_data)` - Create client update markdown
 - `load_components_library()` - Load component library as flat list
+
+**Portfolio Functions (portfolio_lib.py):**
+- `load_portfolio(portfolio_path)` - Load manifest and all projects
+- `get_next_task(project_data)` - Identify next actionable task (dependency-based)
+- `detect_batch_candidates(portfolio_data)` - Find batchable tasks across projects
+- `calculate_analyst_workload(portfolio_data)` - Aggregate workload by analyst
+- `get_immediate_attention_items(portfolio_data)` - Tuesday morning standup view
+- `create_daily_snapshot(portfolio_data)` - Historical logging to JSON
+
+---
+
+## Session Summary: Key Decisions
+
+**v1.1 Release - Portfolio Dashboard (Dec 22-23, 2025)**
+
+**Architecture:**
+- User-configurable portfolio manifests (can track multiple portfolios)
+- Shared library pattern (`portfolio_lib.py`) for code reuse
+- Portfolio Overview tab integrated into main UI
+- Separate `logs/` directory for daily snapshots
+
+**Critical Decisions:**
+- **Next task logic**: Dependency-based (not sequential) - enables flexible task assignment
+- **Batch detection**: Configurable by component type + platform + status
+- **Time conversion**: 3:1 hours-to-days ratio for realistic scheduling
+- **Milestones**: Separate major phases (Image Receipt, Segmentation, Classification, Spatial Analysis)
+- **Analyst capacity**: Tracked in portfolio.toml (hours/day per analyst)
+
+**Implementation:**
+- 5 new files created (portfolio_lib.py, manifests, documentation)
+- 4 files updated (project_tracker_ui.py, README, CLAUDE.md, DEVELOPMENT_LOG)
+- Tested and working with example data
+- Ready for astraea-ops repository integration
+
+**Use Case Delivered:**
+PM can see full portfolio status in <5 minutes every Tuesday morning:
+- What's blocked/overdue/high utilization across ALL projects
+- Which analysts are overloaded vs. have capacity
+- What tasks can be batched together (GPU runs, reviews)
+- Timeline view of all upcoming deadlines

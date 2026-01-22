@@ -1,0 +1,13 @@
+# astraea-ops - Universal Python Requirements
+# Install with: pip install -r requirements.txt
+
+# Analysis Architect dependencies
+streamlit>=1.28.0
+tomli>=2.0.0  # TOML reading (Python 3.11+ has built-in tomllib)
+tomli-w>=1.0.0  # TOML writing
+pandas>=2.0.0
+
+# Add other tool dependencies here as you build more tools
+# Example:
+# requests>=2.31.0
+# numpy>=1.24.0
