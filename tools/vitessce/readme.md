@@ -2,6 +2,10 @@
 
 This repository provides a pipeline to transform raw spatial transcriptomics data (.h5ad format) into interactive Vitessce visualizations, with full data lineage and metadata management powered by LaminDB.
 
+
+<img width="1406" height="682" alt="image" src="https://github.com/user-attachments/assets/67201d99-669a-4806-ac92-fe8f89354050" />
+
+
 ## 🚀 Quick Start (From Scratch)
 1. Prerequisites
 
