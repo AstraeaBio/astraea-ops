@@ -1,0 +1,23 @@
+services:
+  jupyter:
+    build: ./jupyter
+    container_name: jupyter_notebook_vitessce
+    restart: unless-stopped
+    ports:
+      - "19006:8888"
+    volumes:
+      # MOUNT THE PROJECT ROOT
+      # This allows the container to see the ENTIRE tree structure (jupyter/ and data/)
+      - .:/home/jovyan/work
+      
+      # Persist your config volume so you don't lose your settings
+      - jupyter_profile:/home/jovyan/.jupyter
+    
+    # SET THE ENTRY POINT TO THE SCRIPTS DIRECTORY
+    working_dir: /home/jovyan/work/jupyter/notebooks
+    
+    environment:
+      JUPYTER_ENABLE_LAB: 'yes'
+
+volumes:
+  jupyter_profile:

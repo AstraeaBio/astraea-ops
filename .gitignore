@@ -50,3 +50,9 @@ desktop.ini
 # projects/*/
 # !projects/README.md
 # !projects/example_project/
+
+```text
+data/
+jupyter_profile/
+.ipynb_checkpoints/
+__pycache__/
